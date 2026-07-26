@@ -21,7 +21,7 @@ async def play_shuffle(message: Message) -> None:
     for step in steps:
         msg = await message.answer(step)
         # Чуть дольше и с лёгким разбросом, чтобы не было «метронома»
-        await asyncio.sleep(random.uniform(1.0, 2.5))
+        await asyncio.sleep(random.uniform(2.2, 4.4))
         try:
             await msg.delete()
         except Exception:
