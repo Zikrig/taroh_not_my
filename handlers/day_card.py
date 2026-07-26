@@ -16,8 +16,7 @@ async def deliver_day_card(message: Message, user_id: int) -> None:
     card_id, is_new = await db.get_or_create_day_card(user_id, day, picked["id"])
     card = card_by_id(card_id) or picked
 
-    if is_new:
-        await play_shuffle(message)
+    await play_shuffle(message)
 
     caption = content.format_day_card_caption(card)
     await send_card_result(message, caption, content.card_image_path(card["id"]))
