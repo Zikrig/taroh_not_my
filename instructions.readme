@@ -1,0 +1,81 @@
+# ТАРО Спроси жука — запуск
+
+## Требования
+
+- Python 3.14+ (или Docker)
+- Токен бота от @BotFather
+- Сервер с доступом к `api.telegram.org` (если Telegram заблокирован у вас локально — деплойте за рубежом)
+
+## Настройка
+
+1. Скопируйте `.env.example` в `.env`
+2. Заполните минимум:
+   - `BOT_TOKEN` — токен Telegram-бота
+   - `ADMIN_IDS` — ваш Telegram ID (для `/stats`)
+3. Для оплаты картой (ЮKassa):
+   - `YOOKASSA_SHOP_ID`
+   - `YOOKASSA_SECRET_KEY`
+   - `PAYMENT_RETURN_URL` (например `https://t.me/your_bot`)
+4. Stars включаются флагом `ENABLE_STARS=true` (токен провайдера не нужен, валюта `XTR`)
+
+## Офлайн-проверка (без Telegram)
+
+Перед деплоем можно проверить данные, БД, нумерологию и роутеры:
+
+```bash
+pip install -r requirements.txt
+python scripts/offline_check.py
+```
+
+## Локальный / серверный запуск
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python bot.py
+```
+
+База SQLite создаётся в `data_runtime/bot.db`.
+
+## Docker (рекомендуется на VPS)
+
+На сервере с доступом к Telegram:
+
+```bash
+cp .env.example .env
+# отредактируйте .env — BOT_TOKEN, ADMIN_IDS, платежи
+docker compose up --build -d
+docker compose logs -f bot
+```
+
+Том `bot-data` монтируется в `/app/data_runtime` (база сохраняется между перезапусками).
+
+## Полезные команды админа
+
+- `/stats` — всего пользователей и сколько открыли карту дня сегодня
+- `/add_points <tg_id> <amount>` — начислить баллы
+
+## Цены (баллы)
+
+1 балл = 1 ₽.
+
+По умолчанию:
+
+- Да / Нет — 30
+- Энергия года — 199
+- Денежный прогноз — 199
+
+Меняются через `PRICE_*` в `.env`.
+
+## Картинки карт
+
+Файлы лежат в `data/pics/` (единые имена: `шут.png`, `2 жезлов.png`, …).
+Соответствие карта → файл: `data/card_images.json`.
+Если файла нет для карты, бот отправит только текст.
+
+## Troubleshooting
+
+- Бот не стартует: проверьте `BOT_TOKEN` и доступ сервера к `api.telegram.org`
+- ЮKassa не создаёт платёж: проверьте shop id / secret и receipt email настройки магазина
+- Напоминания в 10:00 не приходят: проверьте `TZ` (по умолчанию `Europe/Moscow`)

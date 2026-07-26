@@ -1,0 +1,6 @@
+aiogram~=3.29
+python-dotenv
+aiosqlite
+yookassa
+httpx
+apscheduler

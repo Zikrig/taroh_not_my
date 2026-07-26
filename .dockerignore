@@ -1,0 +1,13 @@
+.env
+__pycache__/
+.git/
+.venv/
+venv/
+creds.json
+*.md
+*.readme
+.cursor/
+_extracted/
+materials/
+*.docx
+agent-transcripts/

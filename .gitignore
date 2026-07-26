@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+creds.json
+*.db
+data/*.db
+data_runtime/
+.DS_Store
+_extracted/
+_tmp_ocr*.png
+.cursor/
