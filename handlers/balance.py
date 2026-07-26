@@ -14,7 +14,9 @@ from aiogram.types import (
 from config import settings
 from handlers.nav import show_text
 from keyboards.buy import (
+    HISTORY_PAGE_SIZE,
     balance_menu,
+    history_keyboard,
     packs_keyboard,
     pay_method_keyboard,
     support_method_keyboard,
@@ -133,16 +135,38 @@ async def bal_packs(callback: CallbackQuery) -> None:
     await show_text(callback, "Выбери пакет баллов:", packs_keyboard())
 
 
-@router.callback_query(F.data == "bal:history")
+@router.callback_query(F.data.startswith("bal:history:"))
 async def bal_history(callback: CallbackQuery) -> None:
-    rows = await db.recent_purchases(callback.from_user.id)
-    if not rows:
-        await show_text(callback, "История покупок пуста.", back_main())
+    raw = callback.data.split(":")[-1]
+    page = int(raw) if raw.isdigit() else 0
+    if page < 0:
+        page = 0
+
+    total = await db.count_purchases(callback.from_user.id)
+    if total == 0:
+        await show_text(callback, "📋 История покупок пуста.", balance_menu())
         return
-    lines = [
-        f"{row['created_at'][:16]} — {row['title']} ({row['amount']} 💎)" for row in rows
-    ]
-    await show_text(callback, "\n".join(lines), back_main())
+
+    pages = max(1, (total + HISTORY_PAGE_SIZE - 1) // HISTORY_PAGE_SIZE)
+    if page >= pages:
+        page = pages - 1
+
+    rows = await db.recent_purchases(
+        callback.from_user.id,
+        limit=HISTORY_PAGE_SIZE,
+        offset=page * HISTORY_PAGE_SIZE,
+    )
+    await show_text(
+        callback,
+        "📋 <b>История пополнений</b>",
+        history_keyboard(rows, page, total, tz_name=settings.tz),
+    )
+
+
+@router.callback_query(F.data.startswith("bal:hist:item:"))
+@router.callback_query(F.data == "bal:hist:noop")
+async def bal_history_noop(callback: CallbackQuery) -> None:
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("bal:buy:"))

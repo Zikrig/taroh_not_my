@@ -277,16 +277,26 @@ class Database:
         )
         await self.conn.commit()
 
-    async def recent_purchases(self, tg_id: int, limit: int = 10) -> list[dict[str, Any]]:
+    async def count_purchases(self, tg_id: int) -> int:
+        cur = await self.conn.execute(
+            "SELECT COUNT(*) AS c FROM purchases WHERE tg_id = ?",
+            (tg_id,),
+        )
+        row = await cur.fetchone()
+        return int(row["c"]) if row else 0
+
+    async def recent_purchases(
+        self, tg_id: int, limit: int = 10, offset: int = 0
+    ) -> list[dict[str, Any]]:
         cur = await self.conn.execute(
             """
-            SELECT amount, payload, title, created_at
+            SELECT amount, payload, title, charge_id, created_at
             FROM purchases
             WHERE tg_id = ?
             ORDER BY id DESC
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """,
-            (tg_id, limit),
+            (tg_id, limit, offset),
         )
         rows = await cur.fetchall()
         return [dict(r) for r in rows]
