@@ -41,17 +41,24 @@ async def send_card_result(
     message: Message,
     caption: str,
     image_path=None,
+    *,
+    upload_name: str | None = None,
 ) -> None:
     # Telegram: caption у фото ≤ 1024, обычное сообщение ≤ 4096
     if image_path is not None and image_path.exists():
-        photo = FSInputFile(image_path)
-        if len(caption) <= 1024:
-            await message.answer_photo(photo, caption=caption, parse_mode="HTML")
-        else:
-            await message.answer_photo(photo)
-            await message.answer(caption, parse_mode="HTML")
-    else:
-        await message.answer(caption, parse_mode="HTML")
+        # ASCII-имя при загрузке — надёжнее в Docker/Linux с кириллическими путями
+        name = upload_name or image_path.name
+        try:
+            photo = FSInputFile(image_path, filename=name)
+            if len(caption) <= 1024:
+                await message.answer_photo(photo, caption=caption, parse_mode="HTML")
+            else:
+                await message.answer_photo(photo)
+                await message.answer(caption, parse_mode="HTML")
+            return
+        except Exception:
+            pass
+    await message.answer(caption, parse_mode="HTML")
 
 
 def card_by_id(card_id: str) -> dict | None:

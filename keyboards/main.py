@@ -124,10 +124,10 @@ def year_picker(prefix: str, current_year: int) -> InlineKeyboardMarkup:
 
 
 def insufficient_funds_keyboard() -> InlineKeyboardMarkup:
-    """Кнопка кристаллов — последняя под сообщением о нехватке баллов."""
+    """Баллы выше, «Назад» ниже."""
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     builder.row(InlineKeyboardButton(text="💎 Баллы", callback_data="bal:main"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     return builder.as_markup()
 
 

@@ -19,7 +19,7 @@ from keyboards.buy import (
     pay_method_keyboard,
     support_method_keyboard,
 )
-from keyboards.main import back_main
+from keyboards.main import back_main, main_menu
 from services.db import db
 from services.payments import check_yookassa_payment, create_yookassa_payment
 
@@ -49,9 +49,11 @@ async def _apply_balance_topup(
         f"Сейчас на счету: <b>{balance}</b> 💎."
     )
     if isinstance(notify, Message):
-        await notify.answer(text, parse_mode="HTML")
+        await notify.answer(text, reply_markup=main_menu(), parse_mode="HTML")
     else:
-        await notify.send_message(user_id, text, parse_mode="HTML")
+        await notify.send_message(
+            user_id, text, reply_markup=main_menu(), parse_mode="HTML"
+        )
     return True
 
 
@@ -65,9 +67,9 @@ async def auto_check_yookassa(
     amount_rub: int,
 ) -> None:
     charge_id = f"yookassa-{payment_id}"
-    max_checks = 18
+    max_checks = 54  # ~9 минут при проверке раз в 10 секунд
     for _ in range(max_checks):
-        await asyncio.sleep(30)
+        await asyncio.sleep(10)
         status = await check_yookassa_payment(payment_id)
         if not status:
             continue

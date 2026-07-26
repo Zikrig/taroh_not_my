@@ -65,9 +65,25 @@ async def yes_no_draw(callback: CallbackQuery) -> None:
         )
         return
 
+    # Сразу убираем кнопку, чтобы не было повторных нажатий во время анимации
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+
     await play_shuffle(callback.message)
     card = content.pick_yes_no_card()
     caption = content.format_yes_no_caption(card)
-    image = content.major_image_path(int(card["number"]))
-    await send_card_result(callback.message, caption, image)
-    await callback.message.answer("Выбери действие 🍃", reply_markup=back_main())
+    number = int(card["number"])
+    image = content.major_image_path(number)
+    await send_card_result(
+        callback.message,
+        caption,
+        image,
+        upload_name=f"yesno_{number}.png",
+    )
+    answer = (card.get("answer") or "").strip()
+    follow = f"🔮 Карта ответа: <b>{card['name']}</b>"
+    if answer:
+        follow += f"\n<b>{answer}</b>"
+    await callback.message.answer(follow, reply_markup=back_main(), parse_mode="HTML")

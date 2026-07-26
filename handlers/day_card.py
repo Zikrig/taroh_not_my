@@ -21,7 +21,18 @@ async def deliver_day_card(message: Message, user_id: int) -> None:
 
     caption = content.format_day_card_caption(card)
     await send_card_result(message, caption, content.card_image_path(card["id"]))
-    await message.answer("Выбери действие в меню 🍃", reply_markup=main_menu())
+
+    if is_new:
+        followup = (
+            f"✨ <b>Твоя карта дня — {card['name']}</b>\n"
+            "Колода обновится завтра в 00:00. До встречи в сказочном лесу! 🍃🔮"
+        )
+    else:
+        followup = (
+            f"🃏 <b>Твоя карта дня на сегодня — {card['name']}</b>\n"
+            "Она уже с тобой до полуночи. Загляни снова завтра за новой 🌿"
+        )
+    await message.answer(followup, reply_markup=main_menu(), parse_mode="HTML")
 
 
 @router.message(Command("card"))

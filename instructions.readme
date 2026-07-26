@@ -70,7 +70,7 @@ docker compose logs -f bot
 
 ## Картинки карт
 
-Файлы лежат в `data/pics/` (единые имена: `шут.png`, `2 жезлов.png`, …).
+Файлы лежат в `data/pics/` (ASCII-имена: `0_shut.png`, `wands_2.png`, … — так надёжнее в Docker/Linux).
 Соответствие карта → файл: `data/card_images.json`.
 Если файла нет для карты, бот отправит только текст.
 

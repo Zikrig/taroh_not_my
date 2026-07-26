@@ -94,7 +94,12 @@ def pick_day_card(user_id: int, day_key: str) -> dict:
 
 
 def pick_yes_no_card() -> dict:
-    return random.choice(yes_no_cards())
+    """Случайный Старший Аркан для Да/Нет (криптостойкий random)."""
+    cards = yes_no_cards()
+    if not cards:
+        raise RuntimeError("yes_no.json is empty")
+    # SystemRandom — не зависит от возможного seed у random
+    return random.SystemRandom().choice(cards)
 
 
 def format_day_card_caption(card: dict) -> str:
