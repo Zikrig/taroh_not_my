@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from handlers import about, admin, balance, day_card, energy, money, start, yes_no
+from handlers import about, admin, balance, day_card, energy, fallback, money, start, yes_no
 
 
 def setup_routers() -> Router:
@@ -13,4 +13,6 @@ def setup_routers() -> Router:
     root.include_router(balance.router)
     root.include_router(about.router)
     root.include_router(admin.router)
+    # Последним: всё, что не попало в кнопки/команды и не в FSM-сценарий
+    root.include_router(fallback.router)
     return root
