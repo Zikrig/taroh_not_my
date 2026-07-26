@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -17,16 +18,15 @@ async def play_shuffle(message: Message) -> None:
         "✨ Светлячки освещают путь к ответу..",
         "🔮 Последний штрих волшебства..",
     ]
-    # Пауза на экране каждого «всплывающего» сообщения (~как у memtaro)
-    hold_seconds = 2.0
     for step in steps:
         msg = await message.answer(step)
-        await asyncio.sleep(hold_seconds)
+        # Чуть дольше и с лёгким разбросом, чтобы не было «метронома»
+        await asyncio.sleep(random.uniform(1.0, 2.5))
         try:
             await msg.delete()
         except Exception:
             pass
-    await asyncio.sleep(0.4)
+    await asyncio.sleep(random.uniform(0.3, 0.7))
 
 
 def today_key() -> str:
