@@ -12,12 +12,14 @@ from aiogram.types import (
 )
 
 from config import settings
+from handlers.nav import show_text
 from keyboards.buy import (
     balance_menu,
     packs_keyboard,
     pay_method_keyboard,
     support_method_keyboard,
 )
+from keyboards.main import back_main
 from services.db import db
 from services.payments import check_yookassa_payment, create_yookassa_payment
 
@@ -106,68 +108,51 @@ async def auto_check_yookassa(
         pass
 
 
-@router.message(F.text == "💎 Баллы")
-async def balance_entry(message: Message) -> None:
+@router.callback_query(F.data == "bal:main")
+async def bal_main(callback: CallbackQuery) -> None:
     await db.ensure_user(
-        message.from_user.id,
-        message.from_user.username,
-        message.from_user.full_name,
+        callback.from_user.id,
+        callback.from_user.username,
+        callback.from_user.full_name,
     )
-    user = await db.get_user(message.from_user.id)
+    user = await db.get_user(callback.from_user.id)
     balance = user["balance"] if user else 0
-    await message.answer(
+    await show_text(
+        callback,
         f"У тебя на счету <b>{balance}</b> 💎\n"
         "1 балл = 1 ₽.\n\n"
         "Баллы нужны для «Да / Нет», «Энергии года» и «Денежного прогноза».",
-        reply_markup=balance_menu(),
-        parse_mode="HTML",
-    )
-
-
-@router.callback_query(F.data == "bal:main")
-async def bal_main(callback: CallbackQuery) -> None:
-    await callback.answer()
-    user = await db.get_user(callback.from_user.id)
-    balance = user["balance"] if user else 0
-    await callback.message.answer(
-        f"У тебя на счету <b>{balance}</b> 💎",
-        reply_markup=balance_menu(),
-        parse_mode="HTML",
+        balance_menu(),
     )
 
 
 @router.callback_query(F.data == "bal:packs")
 async def bal_packs(callback: CallbackQuery) -> None:
-    await callback.answer()
-    await callback.message.answer(
-        "Выбери пакет баллов:",
-        reply_markup=packs_keyboard(),
-    )
+    await show_text(callback, "Выбери пакет баллов:", packs_keyboard())
 
 
 @router.callback_query(F.data == "bal:history")
 async def bal_history(callback: CallbackQuery) -> None:
-    await callback.answer()
     rows = await db.recent_purchases(callback.from_user.id)
     if not rows:
-        await callback.message.answer("История покупок пуста.")
+        await show_text(callback, "История покупок пуста.", back_main())
         return
-    lines = []
-    for row in rows:
-        lines.append(f"{row['created_at'][:16]} — {row['title']} ({row['amount']} 💎)")
-    await callback.message.answer("\n".join(lines))
+    lines = [
+        f"{row['created_at'][:16]} — {row['title']} ({row['amount']} 💎)" for row in rows
+    ]
+    await show_text(callback, "\n".join(lines), back_main())
 
 
 @router.callback_query(F.data.startswith("bal:buy:"))
 async def bal_buy(callback: CallbackQuery) -> None:
-    await callback.answer()
     points = callback.data.split(":")[-1]
     if points not in settings.balance_packs:
+        await callback.answer()
         return
-    await callback.message.answer(
+    await show_text(
+        callback,
         f"Выбери способ оплаты за <b>{points}</b> 💎:",
-        reply_markup=pay_method_keyboard(points),
-        parse_mode="HTML",
+        pay_method_keyboard(points),
     )
 
 
@@ -226,12 +211,11 @@ async def bal_yoo(callback: CallbackQuery) -> None:
 
 @router.callback_query(F.data.startswith("support:buy:"))
 async def support_buy(callback: CallbackQuery) -> None:
-    await callback.answer()
     amount = callback.data.split(":")[-1]
-    await callback.message.answer(
+    await show_text(
+        callback,
         f"Способ поддержки на <b>{amount}</b> ₽:",
-        reply_markup=support_method_keyboard(amount),
-        parse_mode="HTML",
+        support_method_keyboard(amount),
     )
 
 

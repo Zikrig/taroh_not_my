@@ -9,10 +9,8 @@ def balance_menu() -> InlineKeyboardMarkup:
     builder.row(
         InlineKeyboardButton(text="💎 Купить баллы", callback_data="bal:packs")
     )
-    builder.row(
-        InlineKeyboardButton(text="📋 История", callback_data="bal:history")
-    )
-    builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu"))
+    builder.row(InlineKeyboardButton(text="📋 История", callback_data="bal:history"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     return builder.as_markup()
 
 
@@ -58,7 +56,6 @@ def pay_method_keyboard(points: str) -> InlineKeyboardMarkup:
 
 def support_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    # Быстрые донаты в баллах/рублях
     for amount in (50, 100, 300, 500):
         builder.row(
             InlineKeyboardButton(
@@ -66,7 +63,7 @@ def support_keyboard() -> InlineKeyboardMarkup:
                 callback_data=f"support:buy:{amount}",
             )
         )
-    builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:other"))
     return builder.as_markup()
 
 

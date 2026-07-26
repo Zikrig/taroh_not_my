@@ -10,8 +10,8 @@ def setup_routers() -> Router:
     root.include_router(yes_no.router)
     root.include_router(energy.router)
     root.include_router(money.router)
-    root.include_router(balance.router)
     root.include_router(about.router)
+    root.include_router(balance.router)
     root.include_router(admin.router)
     # Последним: всё, что не попало в кнопки/команды и не в FSM-сценарий
     root.include_router(fallback.router)

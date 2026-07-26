@@ -3,7 +3,8 @@ from aiogram.types import CallbackQuery, Message
 
 from config import settings
 from handlers.common import play_shuffle, send_card_result
-from keyboards.main import yes_no_confirm
+from handlers.nav import show_text
+from keyboards.main import back_main, insufficient_funds_keyboard, yes_no_confirm
 from services import content
 from services.db import db
 
@@ -18,32 +19,26 @@ INTRO = (
 )
 
 
-async def show_yes_no(message: Message, user_id: int, username: str | None = None, full_name: str | None = None) -> None:
+async def show_yes_no(
+    target: Message | CallbackQuery,
+    user_id: int,
+    username: str | None = None,
+    full_name: str | None = None,
+) -> None:
     await db.ensure_user(user_id, username, full_name)
     user = await db.get_user(user_id)
     balance = user["balance"] if user else 0
-    await message.answer(
+    await show_text(
+        target,
         f"{INTRO}\n\nТвой баланс: <b>{balance}</b> 💎",
-        reply_markup=yes_no_confirm(),
-        parse_mode="HTML",
-    )
-
-
-@router.message(F.text == "✅ Да / Нет")
-async def yes_no_entry(message: Message) -> None:
-    await show_yes_no(
-        message,
-        message.from_user.id,
-        message.from_user.username,
-        message.from_user.full_name,
+        yes_no_confirm(),
     )
 
 
 @router.callback_query(F.data == "goto:yesno")
 async def yes_no_goto(callback: CallbackQuery) -> None:
-    await callback.answer()
     await show_yes_no(
-        callback.message,
+        callback,
         callback.from_user.id,
         callback.from_user.username,
         callback.from_user.full_name,
@@ -54,7 +49,9 @@ async def yes_no_goto(callback: CallbackQuery) -> None:
 async def yes_no_draw(callback: CallbackQuery) -> None:
     await callback.answer()
     user_id = callback.from_user.id
-    await db.ensure_user(user_id, callback.from_user.username, callback.from_user.full_name)
+    await db.ensure_user(
+        user_id, callback.from_user.username, callback.from_user.full_name
+    )
 
     spent = await db.try_spend(user_id, settings.price_yes_no)
     if not spent:
@@ -62,8 +59,8 @@ async def yes_no_draw(callback: CallbackQuery) -> None:
         balance = user["balance"] if user else 0
         await callback.message.answer(
             f"Не хватает баллов 💎\n"
-            f"Нужно: <b>{settings.price_yes_no}</b>, у тебя: <b>{balance}</b>.\n"
-            "Пополни баланс через кнопку «💎 Баллы».",
+            f"Нужно: <b>{settings.price_yes_no}</b>, у тебя: <b>{balance}</b>.",
+            reply_markup=insufficient_funds_keyboard(),
             parse_mode="HTML",
         )
         return
@@ -71,6 +68,6 @@ async def yes_no_draw(callback: CallbackQuery) -> None:
     await play_shuffle(callback.message)
     card = content.pick_yes_no_card()
     caption = content.format_yes_no_caption(card)
-    # yes/no uses major arcana numbers 0-21
     image = content.major_image_path(int(card["number"]))
     await send_card_result(callback.message, caption, image)
+    await callback.message.answer("Выбери действие 🍃", reply_markup=back_main())

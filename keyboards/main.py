@@ -1,58 +1,65 @@
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-)
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def main_menu() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.row(KeyboardButton(text="🃏 Карта дня"))
-    builder.row(
-        KeyboardButton(text="✅ Да / Нет"),
-        KeyboardButton(text="🍀 Энергия года"),
-    )
-    builder.row(
-        KeyboardButton(text="💰 Денежный прогноз"),
-        KeyboardButton(text="💎 Баллы"),
-    )
-    builder.row(
-        KeyboardButton(text="🩷 Поддержать автора"),
-        KeyboardButton(text="ℹ️ О боте"),
-    )
-    builder.row(KeyboardButton(text="📜 Пользовательское соглашение"))
-    return builder.as_markup(resize_keyboard=True)
-
-
-def about_menu() -> InlineKeyboardMarkup:
+def main_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="🃏 Карта дня", callback_data="menu:daycard"))
     builder.row(
         InlineKeyboardButton(text="✅ Да / Нет", callback_data="goto:yesno"),
         InlineKeyboardButton(text="🍀 Энергия года", callback_data="goto:energy"),
     )
     builder.row(
         InlineKeyboardButton(text="💰 Денежный прогноз", callback_data="goto:money"),
+        InlineKeyboardButton(text="💎 Баллы", callback_data="bal:main"),
     )
+    builder.row(InlineKeyboardButton(text="📂 Другое", callback_data="goto:other"))
+    return builder.as_markup()
+
+
+def other_menu() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="ℹ️ О боте", callback_data="other:about"))
+    builder.row(
+        InlineKeyboardButton(text="🩷 Поддержать автора", callback_data="support:main")
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="📜 Пользовательское соглашение", callback_data="other:agreement"
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="✏️ Изменить дату рождения", callback_data="other:set_birth"
+        )
+    )
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     return builder.as_markup()
 
 
 def back_main() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu")]
+            [InlineKeyboardButton(text="◀️ В меню", callback_data="goto:menu")]
+        ]
+    )
+
+
+def back_other() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="◀️ Назад", callback_data="goto:other")]
         ]
     )
 
 
 def yes_no_confirm() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🔮 Узнать ответ", callback_data="yesno:draw")],
-            [InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu")],
-        ]
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="🔮 Узнать ответ", callback_data="yesno:draw")
     )
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
+    return builder.as_markup()
 
 
 def energy_actions(has_birth: bool) -> InlineKeyboardMarkup:
@@ -68,18 +75,13 @@ def energy_actions(has_birth: bool) -> InlineKeyboardMarkup:
                 text="📅 Выбрать другой год", callback_data="energy:pick_year"
             )
         )
-        builder.row(
-            InlineKeyboardButton(
-                text="✏️ Изменить дату рождения", callback_data="energy:set_birth"
-            )
-        )
     else:
         builder.row(
             InlineKeyboardButton(
-                text="📅 Указать дату рождения", callback_data="energy:set_birth"
+                text="📅 Указать дату рождения", callback_data="other:set_birth"
             )
         )
-    builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     return builder.as_markup()
 
 
@@ -96,32 +98,42 @@ def money_actions(has_birth: bool) -> InlineKeyboardMarkup:
                 text="📅 Выбрать другой год", callback_data="money:pick_year"
             )
         )
-        builder.row(
-            InlineKeyboardButton(
-                text="✏️ Изменить дату рождения", callback_data="money:set_birth"
-            )
-        )
     else:
         builder.row(
             InlineKeyboardButton(
-                text="📅 Указать дату рождения", callback_data="money:set_birth"
+                text="📅 Указать дату рождения", callback_data="other:set_birth"
             )
         )
-    builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="goto:menu"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
     return builder.as_markup()
 
 
 def year_picker(prefix: str, current_year: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     years = [current_year - 1, current_year, current_year + 1, current_year + 2]
-    row: list[InlineKeyboardButton] = []
-    for y in years:
-        row.append(
-            InlineKeyboardButton(text=str(y), callback_data=f"{prefix}:calc:{y}")
-        )
+    row = [
+        InlineKeyboardButton(text=str(y), callback_data=f"{prefix}:calc:{y}")
+        for y in years
+    ]
     builder.row(*row)
     builder.row(
         InlineKeyboardButton(text="✏️ Ввести год", callback_data=f"{prefix}:year_input")
     )
     builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data=f"goto:{prefix}"))
     return builder.as_markup()
+
+
+def insufficient_funds_keyboard() -> InlineKeyboardMarkup:
+    """Кнопка кристаллов — последняя под сообщением о нехватке баллов."""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="goto:menu"))
+    builder.row(InlineKeyboardButton(text="💎 Баллы", callback_data="bal:main"))
+    return builder.as_markup()
+
+
+def cancel_input_keyboard(back_to: str = "goto:other") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="◀️ Отмена", callback_data=back_to)]
+        ]
+    )
