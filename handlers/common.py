@@ -11,23 +11,22 @@ from services import content
 
 
 async def play_shuffle(message: Message) -> None:
+    """Как в ТЗ: сообщения по очереди появляются и исчезают, потом карта."""
     steps = [
         "🪲 Жучки перемешивают колоду..",
         "✨ Светлячки освещают путь к ответу..",
         "🔮 Последний штрих волшебства..",
     ]
-    msg = await message.answer(steps[0])
-    for step in steps[1:]:
-        await asyncio.sleep(0.9)
+    # Пауза на экране каждого «всплывающего» сообщения (~как у memtaro)
+    hold_seconds = 2.0
+    for step in steps:
+        msg = await message.answer(step)
+        await asyncio.sleep(hold_seconds)
         try:
-            await msg.edit_text(step)
+            await msg.delete()
         except Exception:
-            await message.answer(step)
-    await asyncio.sleep(0.7)
-    try:
-        await msg.delete()
-    except Exception:
-        pass
+            pass
+    await asyncio.sleep(0.4)
 
 
 def today_key() -> str:
