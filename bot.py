@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 
 def _self_check() -> None:
     """Локальные проверки до polling — без запросов к Telegram."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
     cards = content.day_cards()
     images = content.card_images()
     if len(cards) != 78:
@@ -38,7 +41,16 @@ def _self_check() -> None:
     for name in ("yes_no.json", "energy_year.json", "money_forecast.json"):
         if not (settings.data_dir / name).exists():
             raise SystemExit(f"Missing data file: {name}")
-    logger.info("Self-check OK: 78 cards, content files present")
+    try:
+        tz = ZoneInfo(settings.tz)
+    except Exception as exc:
+        raise SystemExit(f"Invalid TZ={settings.tz!r}: {exc}") from exc
+    now = datetime.now(tz)
+    logger.info(
+        "Self-check OK: 78 cards | TZ=%s | now=%s",
+        settings.tz,
+        now.strftime("%Y-%m-%d %H:%M:%S %Z"),
+    )
 
 
 async def main() -> None:

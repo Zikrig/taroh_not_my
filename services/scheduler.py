@@ -13,22 +13,25 @@ from services.db import db
 
 logger = logging.getLogger(__name__)
 
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone=settings.tz)
 
 
 async def send_morning_reminders(bot: Bot) -> None:
-    text = (
-        "🌞 Доброе утро! Твоя карта дня ждёт тебя 🔮\n"
-        "Нажми кнопку ниже — и сразу получишь предсказание"
-    )
+    text = "🌞 Доброе утро! Твоя карта дня ждёт тебя 🔮"
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🃏 Получить карту дня",
+                    text="🃏 Карта дня",
                     callback_data="menu:daycard",
                 )
-            ]
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 Главное меню",
+                    callback_data="goto:menu",
+                )
+            ],
         ]
     )
     user_ids = await db.users_with_notifications()
@@ -40,6 +43,8 @@ async def send_morning_reminders(bot: Bot) -> None:
 
 
 def start_scheduler(bot: Bot) -> None:
+    from datetime import datetime
+
     tz = ZoneInfo(settings.tz)
     scheduler.add_job(
         send_morning_reminders,
@@ -50,10 +55,12 @@ def start_scheduler(bot: Bot) -> None:
     )
     if not scheduler.running:
         scheduler.start()
+        now = datetime.now(tz)
         logger.info(
-            "Scheduler started: morning reminder at %02d:00 %s",
+            "Scheduler started: reminder %02d:00 %s | now %s",
             settings.morning_reminder_hour,
             settings.tz,
+            now.strftime("%Y-%m-%d %H:%M:%S %Z"),
         )
 
 
