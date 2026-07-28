@@ -225,6 +225,19 @@ class Database:
         rows = await cur.fetchall()
         return [int(r["tg_id"]) for r in rows]
 
+    async def list_users(self, limit: int = 50) -> list[dict[str, Any]]:
+        cur = await self.conn.execute(
+            """
+            SELECT tg_id, username, full_name, notifications, created_at
+            FROM users
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        rows = await cur.fetchall()
+        return [dict(r) for r in rows]
+
     async def purchase_exists(self, charge_id: str) -> bool:
         cur = await self.conn.execute(
             "SELECT 1 FROM purchases WHERE charge_id = ?",

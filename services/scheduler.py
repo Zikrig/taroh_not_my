@@ -15,10 +15,11 @@ logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler(timezone=settings.tz)
 
+REMINDER_TEXT = "🌞 Доброе утро! Твоя карта дня ждёт тебя 🔮"
 
-async def send_morning_reminders(bot: Bot) -> None:
-    text = "🌞 Доброе утро! Твоя карта дня ждёт тебя 🔮"
-    kb = InlineKeyboardMarkup(
+
+def reminder_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
@@ -34,12 +35,29 @@ async def send_morning_reminders(bot: Bot) -> None:
             ],
         ]
     )
+
+
+async def send_morning_reminders(bot: Bot) -> dict[str, int]:
+    """Рассылка напоминаний. Возвращает counts: total/ok/fail."""
     user_ids = await db.users_with_notifications()
+    ok = 0
+    fail = 0
+    kb = reminder_keyboard()
     for tg_id in user_ids:
         try:
-            await bot.send_message(tg_id, text, reply_markup=kb)
-        except Exception:
-            logger.debug("Failed to remind user %s", tg_id, exc_info=True)
+            await bot.send_message(tg_id, REMINDER_TEXT, reply_markup=kb)
+            ok += 1
+        except Exception as exc:
+            fail += 1
+            # Частые причины: не жали /start, заблокировали бота, удалили чат
+            logger.warning("Reminder failed for %s: %s", tg_id, exc)
+    logger.info(
+        "Morning reminders done: total=%s ok=%s fail=%s",
+        len(user_ids),
+        ok,
+        fail,
+    )
+    return {"total": len(user_ids), "ok": ok, "fail": fail}
 
 
 def start_scheduler(bot: Bot) -> None:
